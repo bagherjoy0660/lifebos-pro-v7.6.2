@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>+lifeBOSPro</title>
+    <link rel="manifest" href="manifest.json">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="icon" href="assets/icon-192.png" type="image/png">
+
+    <!-- کتابخانه نمودار Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+</head>
+
+<body>
+    <aside class="sidebar" id="sidebar">
+        <div class="logo">
+            <div class="main-name">🧬 +lifeBOSPro</div>
+            <div class="version">v7.6</div>
+        </div>
+        <nav>
+            <div class="nav-item active" data-view="dashboard"><span class="icon">🏠</span> داشبورد</div>
+            <div class="nav-item" data-view="planner"><span class="icon">📋</span> برنامه روزانه</div>
+            <div class="nav-item" data-view="habits"><span class="icon">✅</span> عادت‌ها</div>
+            <div class="nav-item" data-view="focus"><span class="icon">🎯</span> تمرکز</div>
+            <div class="nav-item" data-view="wellness"><span class="icon">🥗</span> تغذیه و خواب</div>
+            <div class="nav-item" data-view="exercise"><span class="icon">🏃</span> تحرک</div>
+            <div class="nav-item" data-view="notepad"><span class="icon">📝</span> یادداشت‌ها</div>
+            <div class="nav-item" data-view="goals"><span class="icon">🎯</span> اهداف</div>
+            <div class="nav-item" data-view="journal"><span class="icon">📖</span> ژورنال</div>
+            <div class="nav-item" data-view="stats"><span class="icon">📊</span> آمار</div>
+            <div class="nav-item" data-view="calendar"><span class="icon">📅</span> تقویم</div>
+        </nav>
+        <div style="margin-top:auto; display:flex; flex-direction:column; gap:8px;">
+            <button class="theme-toggle" onclick="openSettingsModal()">⚙️ تنظیمات</button>
+            <button class="theme-toggle" onclick="toggleTheme()">🌓 تغییر تم</button>
+            <button class="theme-toggle" onclick="openHelpModal()">❓ راهنما</button>
+        </div>
+    </aside>
+
+    <main class="main">
+        <div class="topbar">
+            <div>
+                <div style="font-weight:700; font-size:1.2rem;">سلام! 👋</div>
+                <div style="color:var(--text3);" id="todayDate"></div>
+            </div>
+            <div style="display:flex; gap:12px; align-items:center;">
+                <span class="badge" id="overallProgress">⏳ 0% امروز</span>
+                <span class="badge" id="moodBadge">😊</span>
+                <span class="badge" id="levelBadge">⭐ سطح ۱</span>
+                <span class="badge" id="pointsBadge">💰 ۰ امتیاز</span>
+            </div>
+        </div>
+        <div class="content" id="content"></div>
+    </main>
+
+    <!-- نوار ناوبری پایین (فقط موبایل) -->
+    <div class="bottom-nav">
+        <div class="bottom-nav-item" data-view="dashboard">
+            <span class="icon">🏠</span>
+            <span>خانه</span>
+        </div>
+        <div class="bottom-nav-item" data-view="planner">
+            <span class="icon">📋</span>
+            <span>برنامه</span>
+        </div>
+        <div class="bottom-nav-item" data-view="habits">
+            <span class="icon">✅</span>
+            <span>عادت</span>
+        </div>
+        <div class="bottom-nav-item" data-view="focus">
+            <span class="icon">🎯</span>
+            <span>فوکوس</span>
+        </div>
+        <div class="bottom-nav-item" data-view="stats">
+            <span class="icon">📊</span>
+            <span>آمار</span>
+        </div>
+    </div>
+
+    <!-- دکمه همبرگر برای باز کردن سایدبار کامل -->
+    <button class="menu-toggle" id="menuToggle">☰</button>
+
+    <!-- مدال تنظیمات -->
+    <div id="settingsModal" class="modal-overlay">
+        <div class="modal-content settings-modal">
+            <div class="modal-header">
+                <h2>⚙️ تنظیمات</h2>
+                <button class="close-btn" onclick="closeSettingsModal()">✕</button>
+            </div>
+            <div class="modal-body">
+                <div class="settings-tabs">
+                    <button class="tab-btn active" data-tab="general">عمومی</button>
+                    <button class="tab-btn" data-tab="personalize">شخصی‌سازی</button>
+                    <button class="tab-btn" data-tab="theme">تم و رنگ</button>
+                    <button class="tab-btn" data-tab="scoring">امتیازها</button>
+                    <button class="tab-btn" data-tab="backup">بکاپ بخش‌ها</button>
+                    <button class="tab-btn" data-tab="font">🔤 فونت</button>
+                </div>
+
+                <!-- تب عمومی -->
+                <div id="tab-general" class="tab-content active">
+                    <div class="settings-list">
+                        <button onclick="exportData()" class="settings-item">📥 بکاپ کامل (JSON)</button>
+                        <button onclick="importData()" class="settings-item">📤 بازیابی کامل (JSON)</button>
+                        <button class="small" style="padding:6px 14px; font-size:0.8rem;" onclick="refreshUI()">🔄
+                            رفرش</button>
+                        <button onclick="resetAllData()" class="settings-item danger">🔄 ریست کامل</button>
+                    </div>
+                </div>
+
+                <!-- تب شخصی‌سازی -->
+                <div id="tab-personalize" class="tab-content">
+                    <p style="margin-bottom:12px; color:var(--text2);">کارت‌های قابل نمایش در داشبورد:</p>
+                    <div id="dashboardCardsList" class="dashboard-cards-grid"></div>
+                </div>
+
+                <!-- تب تم و رنگ -->
+                <div id="tab-theme" class="tab-content">
+                    <p style="margin-bottom:16px; color:var(--text2);">رنگ اصلی برنامه:</p>
+                    <div id="themeColorPicker" class="color-picker-grid"></div>
+
+                    <hr style="margin:20px 0; border-color:var(--border);">
+                    <p style="margin-bottom:12px; color:var(--text2);">پس‌زمینه:</p>
+                    <select id="bgTypeSelect" onchange="changeBackgroundType(this.value)"
+                        style="width:100%; margin-bottom:12px;">
+                        <option value="default">تیره/روشن پیش‌فرض</option>
+                        <option value="glass">شیشه‌ای</option>
+                        <option value="custom">تصویر دلخواه</option>
+                    </select>
+                    <div id="customBgUpload" style="display:none;">
+                        <label class="upload-btn">
+                            📁 انتخاب تصویر
+                            <input type="file" id="bgImageInput" accept="image/*" onchange="handleBgImageUpload(this)">
+                        </label>
+                        <div id="bgPreview"
+                            style="width:100%; height:60px; background-size:cover; background-position:center; border-radius:8px; margin-top:8px; display:none;">
+                        </div>
+                        <button class="small danger" style="margin-top:8px;" onclick="removeBgImage()">🗑️ حذف
+                            تصویر</button>
+                    </div>
+                </div>
+
+                <!-- تب امتیازها -->
+                <div id="tab-scoring" class="tab-content">
+                    <p style="margin-bottom:12px; color:var(--text2);">امتیاز هر فعالیت را می‌توانی در بازهٔ مشخص سفارشی
+                        کنی:</p>
+                    <div id="scoringFields" class="scoring-grid">
+                        <!-- توسط JS پر می‌شود -->
+                    </div>
+                    <button class="small warning" style="margin-top:16px; width:100%;"
+                        onclick="resetScoringToDefault()">↺ بازنشانی به مقادیر پیش‌فرض</button>
+                </div>
+
+                <!-- تب بکاپ بخش‌ها -->
+                <div id="tab-backup" class="tab-content">
+                    <p style="margin-bottom:12px; color:var(--text2);">برای هر بخش می‌توانی فایل پشتیبان جداگانه تهیه یا
+                        بازیابی کنی:</p>
+                    <div class="settings-list" id="sectionBackupList">
+                        <!-- توسط JS پر می‌شود -->
+                    </div>
+                </div>
+
+                <!-- تب فونت -->
+                <div id="tab-font" class="tab-content">
+                    <p style="margin-bottom:12px; color:var(--text2);">فونت برنامه:</p>
+                    <div id="fontList" class="settings-list"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- مدال راهنما -->
+    <div id="helpModal" class="modal-overlay">
+        <div class="modal-content settings-modal">
+            <div class="modal-header">
+                <h2>❓ راهنما</h2>
+                <button class="close-btn" onclick="closeHelpModal()">✕</button>
+            </div>
+            <div class="modal-body">
+                <div class="settings-tabs">
+                    <button class="tab-btn active" data-tab="help-guide">راهنمای برنامه</button>
+                    <button class="tab-btn" data-tab="help-about">درباره سازنده</button>
+                </div>
+
+                <div id="tab-help-guide" class="tab-content active" style="max-height:300px; overflow-y:auto;">
+                    <h3>🏠 داشبورد</h3>
+                    <p>نمای کلی از وضعیت امروز شما شامل روند عادت‌ها، جلسات فوکوس، آب مصرفی، خواب و اهداف. با کلیک روی
+                        هر کارت به بخش مربوطه می‌روید.</p>
+                    <h3>📋 برنامه روزانه</h3>
+                    <p>وظایف خود را با اولویت (ضروری، مهم، متوسط، معمولی، کم) تعریف کنید. هر وظیفه می‌تواند زیروظایفی با
+                        تیک جداگانه داشته باشد. درصد پیشرفت به‌صورت خودکار محاسبه می‌شود.</p>
+                    <h3>✅ عادت‌ها</h3>
+                    <p>عادت‌های روزانه مثل مدیتیشن، مطالعه و ... را مدیریت کنید. با تیک زدن هر عادت، استریک شما افزایش
+                        می‌یابد.</p>
+                    <h3>🎯 تمرکز (پومودورو)</h3>
+                    <p>تایمر ۲۵ یا ۴۵ دقیقه‌ای برای کار عمیق و ۵ دقیقه استراحت. حتی می‌توانید زمان دلخواه وارد کنید.
+                        جلسات و دقایق مفید ثبت می‌شوند.</p>
+                    <h3>🥗 تغذیه و خواب</h3>
+                    <p>میزان آب مصرفی (۸ لیوان)، خواب شبانه (ساعت و کیفیت) و وعده‌های غذایی را اینجا ثبت کنید.</p>
+                    <h3>🏃 تحرک</h3>
+                    <p>فعالیت‌های ورزشی روزانه را با نوع و مدت وارد کنید.</p>
+                    <h3>📝 یادداشت‌ها</h3>
+                    <p>یادداشت‌های سریع خود را ذخیره کنید. امکان ویرایش و حذف وجود دارد.</p>
+                    <h3>🎯 اهداف</h3>
+                    <p>اهداف بلندمدت با زیروظایف و اولویت تعریف کنید. با تیک زدن زیروظایف، درصد پیشرفت هدف مشخص می‌شود.
+                    </p>
+                    <h3>📖 ژورنال</h3>
+                    <p>یادداشت روزانهٔ احوال و اتفاقات را اینجا بنویسید. حالت روحی خود را با ایموجی ثبت کنید.</p>
+                    <h3>📊 آمار</h3>
+                    <p>نمودارهای پیشرفت هفتگی: جلسات فوکوس، وعده‌های غذایی، دقایق ورزش و امتیاز تخمینی روزانه. همچنین یک
+                        تقویم شمسی کوچک برای مشاهده آمار روزها.</p>
+                    <h3>📅 تقویم</h3>
+                    <p>تقویم کامل شمسی همراه با نمایش جزئیات کامل هر روز (فوکوس، وعده‌ها، ورزش، آب، ژورنال). روزهای
+                        دارای
+                        فعالیت با هایلایت مشخص می‌شوند.</p>
+                </div>
+
+                <div id="tab-help-about" class="tab-content">
+                    <h3>🧬 +lifeBOSPro</h3>
+                    <p>نسخهٔ ۷.۶ – سیستم‌عامل پیشرفتهٔ سبک زندگی</p>
+                    <p><strong>توسعه دهنده و ایده پرداز:</strong> Mohammad Bagher Hasanvand</p>
+                    <p>با تشکر از تمام تلاش‌هایی که برای بهبود زندگی روزمره انجام می‌دهید. 😊</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- کتابخانه تقویم شمسی -->
+    <script src="https://cdn.jsdelivr.net/npm/jalali-moment@3.3.11/dist/jalali-moment.browser.min.js"></script>
+
+    <!-- برنامه اصلی ماژولار -->
+    <script type="module" src="js/main.js"></script>
+</body>
+
+</html>
