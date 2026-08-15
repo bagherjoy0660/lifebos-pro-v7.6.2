@@ -1,4 +1,4 @@
-// ================== PLANNER v7.7 (با اعتبارسنجی) ==================
+// ================== PLANNER v8.0 (بازنویسی کامل با کلاس‌های تم) ==================
 import { state, saveState } from "../core/state.js";
 import {
   getImportanceColor,
@@ -21,14 +21,15 @@ export function renderPlanner(container) {
     const total = task.subtasks.length;
     const pct = total ? Math.round((done / total) * 100) : 0;
     const isPersistent = task.persistent;
-    return `<div class="card fade-in importance-${task.importance || "medium"}" style="margin-bottom:20px; border-radius:16px; ${isPersistent ? "border: 2px dashed var(--info);" : ""}">
-      <div style="display:flex; justify-content:space-between;">
-        <div style="display:flex; gap:10px; align-items:center;">
-          <span class="badge" style="background:${getImportanceColor(task.importance)};color:#fff;">${getImportanceLabel(task.importance)}</span>
-          <strong>${task.title}</strong>
+
+    return `<div class="task-card ${isPersistent ? "persistent" : ""}">
+      <div class="task-header">
+        <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+          <span class="badge badge-${task.importance}">${getImportanceLabel(task.importance)}</span>
+          <span class="task-title">${task.title}</span>
           ${isPersistent ? '<span style="color:var(--info);" title="ماندگار">📌</span>' : ""}
         </div>
-        <div style="display:flex; gap:8px; align-items:center;">
+        <div class="task-meta">
           <span class="badge">${pct}%</span>
           <button class="small" onclick="togglePersistent(${task.id})" title="${isPersistent ? "تبدیل به روزانه" : "ماندگار کردن"}">${isPersistent ? "📌" : "📍"}</button>
           <button class="small" onclick="editTask(${task.id})">✏️</button>
@@ -40,9 +41,9 @@ export function renderPlanner(container) {
         .map(
           (sub) => `
         <div class="subtask-item">
-          <input type="checkbox" ${sub.done ? "checked" : ""} onchange="toggleSubtask(${task.id},${sub.id})" style="width:20px;height:20px;accent-color:var(--accent);">
-          <span style="flex:1;text-decoration:${sub.done ? "line-through" : ""};">${sub.text}</span>
-          <span class="badge" style="background:${getImportanceColor(sub.importance || "normal")};color:#fff;">${getImportanceLabel(sub.importance || "normal")}</span>
+          <input type="checkbox" ${sub.done ? "checked" : ""} onchange="toggleSubtask(${task.id},${sub.id})">
+          <span class="subtask-text ${sub.done ? "done" : ""}">${sub.text}</span>
+          <span class="badge badge-${sub.importance || "normal"} subtask-badge">${getImportanceLabel(sub.importance || "normal")}</span>
         </div>
       `,
         )
@@ -79,9 +80,8 @@ window.addNewTask = async function () {
     "عنوان وظیفه جدید",
     "مثال: خرید مواد غذایی",
   );
-  if (title === null) return; // کاربر لغو کرد
+  if (title === null) return;
 
-  // اعتبارسنجی: عنوان نباید خالی باشد
   if (!title || !title.trim()) {
     showToast("عنوان وظیفه نمی‌تواند خالی باشد!", "warning");
     return;
@@ -123,9 +123,8 @@ window.editTask = async function (id) {
   if (!task) return;
 
   const newTitle = await showInputModal("ویرایش عنوان وظیفه", "", task.title);
-  if (newTitle === null) return; // کاربر لغو کرد
+  if (newTitle === null) return;
 
-  // اعتبارسنجی: عنوان نباید خالی باشد
   if (!newTitle || !newTitle.trim()) {
     showToast("عنوان وظیفه نمی‌تواند خالی باشد!", "warning");
     return;
@@ -154,9 +153,8 @@ window.deleteTask = async function (id) {
 // افزودن زیروظیفه
 window.addSubtask = async function (taskId) {
   const text = await showInputModal("متن زیروظیفه", "مثال: خرید نان");
-  if (text === null) return; // کاربر لغو کرد
+  if (text === null) return;
 
-  // اعتبارسنجی: متن زیروظیفه نباید خالی باشد
   if (!text || !text.trim()) {
     showToast("متن زیروظیفه نمی‌تواند خالی باشد!", "warning");
     return;
