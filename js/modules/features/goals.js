@@ -1,4 +1,4 @@
-// ================== GOALS v7.7 (با اعتبارسنجی) ==================
+// ================== GOALS v8.0 (بازنویسی کامل با کلاس‌های تم) ==================
 import { state, saveState } from "../core/state.js";
 import {
   getImportanceColor,
@@ -26,13 +26,13 @@ export function renderGoals(container) {
       const pct = total ? Math.round((done / total) * 100) : 0;
 
       html += `
-        <div class="card importance-${goal.importance}" style="margin-bottom:20px; background:var(--surface2);">
-          <div style="display:flex; justify-content:space-between; align-items:center;">
-            <div style="display:flex; align-items:center; gap:10px;">
-              <span class="badge" style="background:${getImportanceColor(goal.importance)};color:#fff;">${getImportanceLabel(goal.importance)}</span>
-              <strong>${goal.title}</strong>
+        <div class="goal-card">
+          <div class="goal-header">
+            <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+              <span class="badge badge-${goal.importance}">${getImportanceLabel(goal.importance)}</span>
+              <span class="goal-title">${goal.title}</span>
             </div>
-            <div style="display:flex; gap:8px;">
+            <div class="goal-meta">
               <span class="badge">${pct}%</span>
               <button class="small" onclick="editGoal(${goal.id})">✏️</button>
               <button class="small danger" onclick="deleteGoal(${goal.id})">🗑️</button>
@@ -43,9 +43,9 @@ export function renderGoals(container) {
             .map(
               (sub) => `
             <div class="subtask-item">
-              <input type="checkbox" ${sub.done ? "checked" : ""} onchange="toggleGoalSubtask(${goal.id},${sub.id})" style="width:20px;height:20px;accent-color:var(--accent);">
-              <span style="flex:1;text-decoration:${sub.done ? "line-through" : ""};">${sub.text}</span>
-              <span class="badge" style="background:${getImportanceColor(sub.importance)};color:#fff;">${getImportanceLabel(sub.importance)}</span>
+              <input type="checkbox" ${sub.done ? "checked" : ""} onchange="toggleGoalSubtask(${goal.id},${sub.id})">
+              <span class="subtask-text ${sub.done ? "done" : ""}">${sub.text}</span>
+              <span class="badge badge-${sub.importance} subtask-badge">${getImportanceLabel(sub.importance)}</span>
             </div>
           `,
             )
@@ -67,9 +67,8 @@ window.addGoal = async function () {
     "عنوان هدف جدید",
     "مثال: یادگیری زبان انگلیسی",
   );
-  if (title === null) return; // کاربر لغو کرد
+  if (title === null) return;
 
-  // اعتبارسنجی: عنوان نباید خالی باشد
   if (!title || !title.trim()) {
     showToast("عنوان هدف نمی‌تواند خالی باشد!", "warning");
     return;
@@ -96,9 +95,8 @@ window.editGoal = async function (id) {
   if (!goal) return;
 
   const newTitle = await showInputModal("ویرایش عنوان هدف", "", goal.title);
-  if (newTitle === null) return; // کاربر لغو کرد
+  if (newTitle === null) return;
 
-  // اعتبارسنجی: عنوان نباید خالی باشد
   if (!newTitle || !newTitle.trim()) {
     showToast("عنوان هدف نمی‌تواند خالی باشد!", "warning");
     return;
@@ -131,9 +129,8 @@ window.deleteGoal = async function (id) {
 // افزودن زیرهدف
 window.addGoalSubtask = async function (gid) {
   const text = await showInputModal("متن زیرهدف", "مثال: روزی ۲۰ کلمه جدید");
-  if (text === null) return; // کاربر لغو کرد
+  if (text === null) return;
 
-  // اعتبارسنجی: متن زیرهدف نباید خالی باشد
   if (!text || !text.trim()) {
     showToast("متن زیرهدف نمی‌تواند خالی باشد!", "warning");
     return;
