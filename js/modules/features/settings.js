@@ -1,4 +1,4 @@
-// ================== SETTINGS v7.7 (با اعتبارسنجی کامل) ==================
+// ================== SETTINGS v8.0 (بازنویسی کامل) ==================
 import {
   state,
   saveState,
@@ -254,6 +254,92 @@ export function initSystemThemeListener() {
     .addEventListener("change", systemThemeListener);
 }
 
+// ================== BACKGROUND IMAGE (بدون باگ) ==================
+export function applyBackground() {
+  const body = document.body;
+
+  body.classList.remove("glass-theme", "custom-bg");
+  body.style.backgroundImage = "";
+  body.style.backgroundColor = "";
+
+  if (state.backgroundType === "glass") {
+    body.classList.add("glass-theme");
+  } else if (state.backgroundType === "custom" && state.backgroundImage) {
+    body.classList.add("custom-bg");
+    body.style.backgroundImage = `url(${state.backgroundImage})`;
+    body.style.backgroundSize = "cover";
+    body.style.backgroundPosition = "center";
+    body.style.backgroundAttachment = "fixed";
+  }
+}
+
+export function changeBackgroundType(value) {
+  state.backgroundType = value;
+  const uploadDiv = document.getElementById("customBgUpload");
+  if (uploadDiv)
+    uploadDiv.style.display = value === "custom" ? "block" : "none";
+  applyBackground();
+  saveState();
+}
+
+export function handleBgImageUpload(input) {
+  const file = input.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = function (e) {
+    const imageData = e.target.result;
+    state.backgroundImage = imageData;
+    state.backgroundType = "custom";
+
+    const body = document.body;
+    body.classList.remove("glass-theme");
+    body.classList.add("custom-bg");
+    body.style.backgroundImage = `url(${imageData})`;
+    body.style.backgroundSize = "cover";
+    body.style.backgroundPosition = "center";
+    body.style.backgroundAttachment = "fixed";
+
+    const bgSelect = document.getElementById("bgTypeSelect");
+    if (bgSelect) bgSelect.value = "custom";
+
+    const preview = document.getElementById("bgPreview");
+    if (preview) {
+      preview.style.backgroundImage = `url(${imageData})`;
+      preview.style.display = "block";
+    }
+
+    saveState();
+    showToast("✅ تصویر پس‌زمینه با موفقیت اعمال شد", "success");
+  };
+  reader.readAsDataURL(file);
+}
+
+export function removeBgImage() {
+  state.backgroundImage = null;
+  state.backgroundType = "default";
+
+  const body = document.body;
+  body.classList.remove("custom-bg", "glass-theme");
+  body.style.backgroundImage = "";
+  body.style.backgroundColor = "";
+  body.style.backgroundSize = "";
+  body.style.backgroundPosition = "";
+  body.style.backgroundAttachment = "";
+
+  const bgSelect = document.getElementById("bgTypeSelect");
+  if (bgSelect) bgSelect.value = "default";
+
+  const preview = document.getElementById("bgPreview");
+  if (preview) {
+    preview.style.backgroundImage = "";
+    preview.style.display = "none";
+  }
+
+  saveState();
+  showToast("🗑️ تصویر پس‌زمینه حذف شد", "info");
+}
+
 // ================== SETTINGS MODAL ==================
 export function openSettingsModal() {
   const modal = document.getElementById("settingsModal");
@@ -271,12 +357,14 @@ export function openSettingsModal() {
     .forEach((c) => c.classList.remove("active"));
   document.getElementById("tab-general").classList.add("active");
 
+  // کارت‌های داشبورد
   const listContainer = document.getElementById("dashboardCardsList");
   if (listContainer) {
     listContainer.className = "dashboard-cards-grid";
     renderDashboardCardsList(listContainer);
   }
 
+  // تم رنگ
   const picker = document.getElementById("themeColorPicker");
   if (picker) {
     picker.innerHTML = Object.keys(THEME_COLORS)
@@ -287,18 +375,23 @@ export function openSettingsModal() {
       .join("");
   }
 
+  // پس‌زمینه
   const bgSelect = document.getElementById("bgTypeSelect");
   if (bgSelect) bgSelect.value = state.backgroundType || "default";
   const uploadDiv = document.getElementById("customBgUpload");
   if (uploadDiv)
     uploadDiv.style.display =
       state.backgroundType === "custom" ? "block" : "none";
+
   const preview = document.getElementById("bgPreview");
   if (preview && state.backgroundImage) {
     preview.style.backgroundImage = `url(${state.backgroundImage})`;
     preview.style.display = "block";
-  } else if (preview) preview.style.display = "none";
+  } else if (preview) {
+    preview.style.display = "none";
+  }
 
+  // چک‌باکس همگام با سیستم
   let syncContainer = document.getElementById("syncThemeContainer");
   if (!syncContainer) {
     syncContainer = document.createElement("div");
@@ -353,7 +446,7 @@ export function closeSettingsModal() {
   document.getElementById("settingsModal").classList.remove("active");
 }
 
-// ================== THEME & BACKGROUND ==================
+// ================== THEME ==================
 export function changeTheme(themeName) {
   if (!THEME_COLORS[themeName]) return;
   document.documentElement.style.setProperty(
@@ -376,7 +469,10 @@ export function changeTheme(themeName) {
 }
 
 export function toggleTheme() {
+  // تغییر کلاس light روی body
   document.body.classList.toggle("light");
+
+  // اگر همگام با سیستم فعال بود، غیرفعالش کن
   if (state.syncWithSystem) {
     state.syncWithSystem = false;
     const syncCb = document.getElementById("syncThemeCheckbox");
@@ -384,64 +480,13 @@ export function toggleTheme() {
     showToast("همگام با سیستم غیرفعال شد", "info");
     saveState();
   }
-  showToast("تم روشن/تیره تغییر کرد");
-}
 
-export function applyBackground() {
-  document.body.classList.remove("glass-theme", "custom-bg");
-  document.body.style.backgroundImage = "";
-  if (state.backgroundType === "glass") {
-    document.body.classList.add("glass-theme");
-  } else if (state.backgroundType === "custom" && state.backgroundImage) {
-    document.body.classList.add("custom-bg");
-    document.body.style.backgroundImage = `url(${state.backgroundImage})`;
-  }
-}
-
-export function changeBackgroundType(value) {
-  state.backgroundType = value;
-  const uploadDiv = document.getElementById("customBgUpload");
-  if (uploadDiv)
-    uploadDiv.style.display = value === "custom" ? "block" : "none";
-  applyBackground();
+  // ذخیره وضعیت تم (اختیاری)
+  const isLight = document.body.classList.contains("light");
+  state.theme = isLight ? "light" : "dark";
   saveState();
-}
 
-export function handleBgImageUpload(input) {
-  const file = input.files[0];
-  if (!file) return;
-  const reader = new FileReader();
-  reader.onload = function (e) {
-    state.backgroundImage = e.target.result;
-    state.backgroundType = "custom";
-    const bgSelect = document.getElementById("bgTypeSelect");
-    if (bgSelect) bgSelect.value = "custom";
-    const uploadDiv = document.getElementById("customBgUpload");
-    if (uploadDiv) uploadDiv.style.display = "block";
-    const preview = document.getElementById("bgPreview");
-    if (preview) {
-      preview.style.backgroundImage = `url(${state.backgroundImage})`;
-      preview.style.display = "block";
-    }
-    applyBackground();
-    saveState();
-    showToast("تصویر پس‌زمینه اعمال شد");
-  };
-  reader.readAsDataURL(file);
-}
-
-export function removeBgImage() {
-  state.backgroundImage = null;
-  state.backgroundType = "default";
-  const bgSelect = document.getElementById("bgTypeSelect");
-  if (bgSelect) bgSelect.value = "default";
-  const uploadDiv = document.getElementById("customBgUpload");
-  if (uploadDiv) uploadDiv.style.display = "none";
-  const preview = document.getElementById("bgPreview");
-  if (preview) preview.style.display = "none";
-  applyBackground();
-  saveState();
-  showToast("تصویر پس‌زمینه حذف شد");
+  showToast(isLight ? "🌞 تم روشن فعال شد" : "🌙 تم تاریک فعال شد");
 }
 
 // ================== DASHBOARD CARDS ==================
@@ -453,16 +498,14 @@ export async function toggleDashboardCard(cardId, isChecked) {
     state.dashboardCards = state.dashboardCards.filter((id) => id !== cardId);
   }
   await saveState();
-
   const listContainer = document.getElementById("dashboardCardsList");
   if (listContainer && listContainer.closest(".modal-overlay.active")) {
     renderDashboardCardsList(listContainer);
   }
-
   if (typeof window.render === "function") window.render();
 }
 
-// ================== SCORING UI (با اعتبارسنجی) ==================
+// ================== SCORING UI ==================
 export function buildScoringFields() {
   const container = document.getElementById("scoringFields");
   if (!container) return;
@@ -488,14 +531,9 @@ export function buildScoringFields() {
     journal: [1, 15],
   };
   Object.keys(labels).forEach((key) => {
-    html += `<div class="scoring-row">
-      <label>${labels[key]}</label>
-      <input type="number" id="score_${key}" value="${sc[key] || 0}" min="${ranges[key][0]}" max="${ranges[key][1]}" onchange="updateScoring('${key}', this.value)">
-      <span style="font-size:0.7rem; color:var(--text3);">(${ranges[key][0]} تا ${ranges[key][1]})</span>
-    </div>`;
+    html += `<div class="scoring-row"><label>${labels[key]}</label><input type="number" id="score_${key}" value="${sc[key] || 0}" min="${ranges[key][0]}" max="${ranges[key][1]}" onchange="updateScoring('${key}', this.value)"></div>`;
   });
   html += "</div>";
-
   html +=
     '<div style="margin-bottom:24px;"><strong>📋 امتیاز پایهٔ هر سطح اهمیت (زیروظیفه)</strong>';
   const levels = ["low", "normal", "medium", "high", "urgent"];
@@ -507,56 +545,27 @@ export function buildScoringFields() {
     urgent: "⚡ ضروری",
   };
   levels.forEach((l) => {
-    html += `<div class="scoring-row">
-      <label>${levelLabels[l]}</label>
-      <input type="number" id="score_subtask_${l}" value="${(sc.subtaskScores && sc.subtaskScores[l]) || 0}" min="0" max="50" onchange="updateScoring('subtask_${l}', this.value)">
-      <span style="font-size:0.7rem; color:var(--text3);">(۰ تا ۵۰)</span>
-    </div>`;
+    html += `<div class="scoring-row"><label>${levelLabels[l]}</label><input type="number" id="score_subtask_${l}" value="${(sc.subtaskScores && sc.subtaskScores[l]) || 0}" min="0" max="50" onchange="updateScoring('subtask_${l}', this.value)"></div>`;
   });
   html += "</div>";
-
   html +=
     '<div style="margin-bottom:24px;"><strong>👤 پاداش اهمیت والد (وظیفه)</strong>';
   levels.forEach((l) => {
-    html += `<div class="scoring-row">
-      <label>${levelLabels[l]}</label>
-      <input type="number" id="score_parent_${l}" value="${(sc.parentBonus && sc.parentBonus[l]) || 0}" min="0" max="50" onchange="updateScoring('parent_${l}', this.value)">
-      <span style="font-size:0.7rem; color:var(--text3);">(۰ تا ۵۰)</span>
-    </div>`;
+    html += `<div class="scoring-row"><label>${levelLabels[l]}</label><input type="number" id="score_parent_${l}" value="${(sc.parentBonus && sc.parentBonus[l]) || 0}" min="0" max="50" onchange="updateScoring('parent_${l}', this.value)"></div>`;
   });
   html += "</div>";
-
   html +=
     '<div style="margin-top:24px; padding-top:16px; border-top:1px solid var(--border);"><strong>💧 تنظیمات آب</strong>';
   html += `<div class="scoring-row"><label>حالت</label><select onchange="switchWaterMode(this.value)"><option value="cups" ${state.waterMode === "cups" ? "selected" : ""}>لیوان</option><option value="bottles" ${state.waterMode === "bottles" ? "selected" : ""}>بطری</option></select></div>`;
   html += `<div class="scoring-row"><label>تعداد هدف</label><input type="number" id="waterGoalInput" value="${state.waterMode === "cups" ? state.waterGoalCups : state.waterGoalBottles}" min="1" max="20" onchange="updateWaterGoal(this.value)"></div>`;
   html += `<div class="scoring-row"><label>آیکون</label><input type="text" id="waterIconInput" value="${state.waterMode === "cups" ? state.waterUnitIconCup : state.waterUnitIconBottle}" onchange="updateWaterIcon(this.value)"></div>`;
   html += "</div>";
-
   container.innerHTML = html;
 }
 
-// ================== SCORING (با اعتبارسنجی) ==================
 export function updateScoring(key, value) {
   const val = parseInt(value);
-  if (isNaN(val)) {
-    showToast("لطفاً یک عدد معتبر وارد کنید!", "warning");
-    // برگرداندن مقدار قبلی
-    const sc = state.scoring;
-    const el = document.getElementById("score_" + key);
-    if (el) {
-      if (numericKeys.includes(key)) el.value = sc[key] || 0;
-      else if (key.startsWith("subtask_")) {
-        const level = key.replace("subtask_", "");
-        el.value = sc.subtaskScores?.[level] || 0;
-      } else if (key.startsWith("parent_")) {
-        const level = key.replace("parent_", "");
-        el.value = sc.parentBonus?.[level] || 0;
-      }
-    }
-    return;
-  }
-
+  if (isNaN(val)) return;
   const numericKeys = [
     "habit",
     "focusSession",
@@ -566,48 +575,19 @@ export function updateScoring(key, value) {
     "exercise",
     "journal",
   ];
-  const ranges = {
-    habit: [1, 20],
-    focusSession: [1, 50],
-    water: [1, 20],
-    sleep: [1, 30],
-    meals: [1, 15],
-    exercise: [1, 20],
-    journal: [1, 15],
-  };
-
   if (numericKeys.includes(key)) {
-    const [min, max] = ranges[key] || [0, 100];
-    if (val < min || val > max) {
-      showToast(`مقدار باید بین ${min} تا ${max} باشد!`, "warning");
-      document.getElementById("score_" + key).value = state.scoring[key] || 0;
-      return;
-    }
     state.scoring[key] = val;
   } else if (key.startsWith("subtask_")) {
     const level = key.replace("subtask_", "");
-    if (val < 0 || val > 50) {
-      showToast("مقدار باید بین ۰ تا ۵۰ باشد!", "warning");
-      document.getElementById("score_subtask_" + level).value =
-        state.scoring.subtaskScores?.[level] || 0;
-      return;
-    }
     if (!state.scoring.subtaskScores) state.scoring.subtaskScores = {};
     state.scoring.subtaskScores[level] = val;
   } else if (key.startsWith("parent_")) {
     const level = key.replace("parent_", "");
-    if (val < 0 || val > 50) {
-      showToast("مقدار باید بین ۰ تا ۵۰ باشد!", "warning");
-      document.getElementById("score_parent_" + level).value =
-        state.scoring.parentBonus?.[level] || 0;
-      return;
-    }
     if (!state.scoring.parentBonus) state.scoring.parentBonus = {};
     state.scoring.parentBonus[level] = val;
   }
-
   saveState();
-  showToast("✅ امتیازها بروز شدند");
+  showToast("امتیازها بروز شدند");
 }
 
 export function resetScoringToDefault() {
@@ -633,17 +613,7 @@ window.switchWaterMode = function (mode) {
 
 window.updateWaterGoal = function (value) {
   const val = parseInt(value);
-  if (isNaN(val) || val < 1) {
-    showToast("لطفاً یک عدد معتبر (بزرگتر از ۰) وارد کنید!", "warning");
-    document.getElementById("waterGoalInput").value =
-      state.waterMode === "cups" ? state.waterGoalCups : state.waterGoalBottles;
-    return;
-  }
-  if (val > 20) {
-    showToast("حداکثر تعداد هدف ۲۰ است!", "warning");
-    document.getElementById("waterGoalInput").value = 20;
-    return;
-  }
+  if (isNaN(val) || val < 1) return;
   if (state.waterMode === "cups") state.waterGoalCups = val;
   else state.waterGoalBottles = val;
   const goal = val;
@@ -656,10 +626,7 @@ window.updateWaterGoal = function (value) {
 };
 
 window.updateWaterIcon = function (value) {
-  if (!value.trim()) {
-    showToast("لطفاً یک آیکون وارد کنید!", "warning");
-    return;
-  }
+  if (!value.trim()) return;
   if (state.waterMode === "cups") state.waterUnitIconCup = value.trim();
   else state.waterUnitIconBottle = value.trim();
   saveState();
@@ -874,3 +841,4 @@ window.refreshUI = function () {
 window.resetAllData = resetAllData;
 window.applySystemTheme = applySystemTheme;
 window.initSystemThemeListener = initSystemThemeListener;
+window.applyBackground = applyBackground;
