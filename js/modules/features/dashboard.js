@@ -75,7 +75,6 @@ export function renderDashboard(container) {
     const intake = Array.isArray(state.waterIntake)
       ? [...state.waterIntake]
       : [];
-    // هم‌طول کردن آرایه با هدف
     while (intake.length < goal) intake.push(0);
     if (intake.length > goal) intake.splice(goal);
     const unitName = mode === "cups" ? "لیوان" : "بطری";
@@ -98,7 +97,7 @@ export function renderDashboard(container) {
       </div>`;
     }
 
-    return `<div class="quick-link" onclick="navigateTo('wellness')">
+    return `<div class="quick-link" onclick="navigateTo('wellness')" style="display:flex; flex-direction:column; justify-content:space-between; height:100%;">
       <div>💧 آب</div>
       <div style="font-size:0.9rem; margin:8px 0;">${displayTotal}</div>
       <div class="habit-scroll" style="text-align:right; max-height:120px; overflow-y:auto;">${listHtml}</div>
@@ -132,12 +131,70 @@ export function renderDashboard(container) {
         }
 
         <div class="dashboard-grid">
-            ${visible("planner") ? `<div class="quick-link" onclick="navigateTo('planner')"><div class="donut-chart"><svg viewBox="0 0 36 36"><path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831" fill="none" stroke="var(--surface3)" stroke-width="3"/><path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831" fill="none" stroke="var(--accent)" stroke-width="3" stroke-dasharray="${taskPercent}, 100"/></svg><div class="donut-center">${taskPercent}%</div></div><div>📋 برنامه روزانه</div></div>` : ""}
-            ${visible("habits") ? `<div class="quick-link" onclick="navigateTo('habits')" style="display:flex; flex-direction:column; justify-content:space-between; height:180px;"><div><div style="font-size:1.5rem;">🔥</div><div>عادت‌ها</div></div><div class="habit-scroll" style="text-align:right; margin-top:8px; font-size:0.8rem; flex:1; min-height:0;">${habitHtml}</div><small>بهترین: ${maxStreak} روز</small></div>` : ""}
-            ${visible("focus") ? `<div class="quick-link" onclick="navigateTo('focus')"><div>🎯 جلسات فوکوس</div><div style="font-size:1.5rem; font-weight:bold; margin:8px 0;">${state.focusSessions} جلسه</div><small>${state.focusMinutes} دقیقه</small></div>` : ""}
+            ${
+              visible("planner")
+                ? `<div class="quick-link" onclick="navigateTo('planner')" style="display:flex; flex-direction:column; justify-content:center; align-items:center; height:100%;">
+  <div class="donut-chart" style="width:100px; height:100px;">
+    <svg viewBox="0 0 36 36">
+      <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831" fill="none" stroke="var(--surface3)" stroke-width="3"/>
+      <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831" fill="none" stroke="var(--accent)" stroke-width="3" stroke-dasharray="${taskPercent}, 100"/>
+    </svg>
+    <div class="donut-center" style="font-size:1.2rem;">${taskPercent}%</div>
+  </div>
+  <div>📋 برنامه روزانه</div>
+</div>`
+                : ""
+            }
+            
+            ${
+              visible("habits")
+                ? `<div class="quick-link habits-card" onclick="navigateTo('habits')" style="display:flex; flex-direction:column; justify-content:space-between; height:100%; min-height:180px;">
+                    <div>
+                      <div style="font-size:1.5rem;">🔥</div>
+                      <div>عادت‌ها</div>
+                    </div>
+                    <div class="habit-scroll" style="text-align:right; margin-top:8px; font-size:0.85rem; flex:1; overflow-y:auto;">${habitHtml}</div>
+                    <small>بهترین: ${maxStreak} روز</small>
+                  </div>`
+                : ""
+            }
+            
+            ${
+              visible("focus")
+                ? `<div class="quick-link" onclick="navigateTo('focus')" style="display:flex; flex-direction:column; justify-content:center; align-items:center; height:100%;">
+                    <div>🎯 جلسات فوکوس</div>
+                    <div style="font-size:1.5rem; font-weight:bold; margin:8px 0;">${state.focusSessions} جلسه</div>
+                    <small>${state.focusMinutes} دقیقه</small>
+                  </div>`
+                : ""
+            }
+            
             ${visible("water") ? waterDashboardHtml() : ""}
-            ${visible("sleep") ? `<div class="quick-link" onclick="navigateTo('wellness')"><div>🌙 خواب دیشب</div><div style="margin:8px 0;">${sleepStars}</div><small>${todaySleep ? `${todaySleep.hours} ساعت` : "ثبت نشده"}</small></div>` : ""}
-            ${visible("goals") ? `<div class="quick-link" onclick="navigateTo('goals')"><div>🎯 اهداف</div><div class="donut-chart" style="width:80px;height:80px;"><svg viewBox="0 0 36 36"><path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831" fill="none" stroke="var(--surface3)" stroke-width="3"/><path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831" fill="none" stroke="var(--warning)" stroke-width="3" stroke-dasharray="${avgGoal}, 100"/></svg><div class="donut-center" style="font-size:0.9rem;">${avgGoal}%</div></div><small>پیشرفت کلی</small></div>` : ""}
+            
+            ${
+              visible("sleep")
+                ? `<div class="quick-link" onclick="navigateTo('wellness')" style="display:flex; flex-direction:column; justify-content:center; align-items:center; height:100%;">
+                    <div>🌙 خواب دیشب</div>
+                    <div style="margin:8px 0;">${sleepStars}</div>
+                    <small>${todaySleep ? `${todaySleep.hours} ساعت` : "ثبت نشده"}</small>
+                  </div>`
+                : ""
+            }
+            
+            ${
+              visible("goals")
+                ? `<div class="quick-link" onclick="navigateTo('goals')" style="display:flex; flex-direction:column; justify-content:center; align-items:center; height:100%;">
+  <div class="donut-chart" style="width:100px; height:100px;">
+    <svg viewBox="0 0 36 36">
+      <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831" fill="none" stroke="var(--surface3)" stroke-width="3"/>
+      <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831" fill="none" stroke="var(--warning)" stroke-width="3" stroke-dasharray="${avgGoal}, 100"/>
+    </svg>
+    <div class="donut-center" style="font-size:1.2rem;">${avgGoal}%</div>
+  </div>
+  <small>پیشرفت کلی</small>
+</div>`
+                : ""
+            }
         </div>
 
         ${
